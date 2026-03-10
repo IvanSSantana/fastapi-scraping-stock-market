@@ -3,11 +3,11 @@ from decimal import Decimal
 
 class StockResponse(BaseModel):
     ticker: str
-    price: Decimal
-    value_variation: Decimal
-    pl: Decimal
-    pvp: Decimal
-    dividend_yield: Decimal
+    price: Decimal | None
+    value_variation: Decimal | None
+    pl: Decimal | None
+    pvp: Decimal | None
+    dividend_yield: Decimal | None
     roe: Decimal | None = None
     roic: Decimal | None = None
     net_debt_to_EBITDA: Decimal | None = None # Dívida Líquida / EBITDA

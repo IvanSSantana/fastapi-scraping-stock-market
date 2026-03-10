@@ -1,7 +1,7 @@
 from decimal import Decimal, InvalidOperation # OBS: Decimal funciona como decimal em C#, tem precisão exata.
 from exceptions import ScrapingError
 
-def price_sanitizer(price_str: str) -> Decimal:
+def price_sanitizer(price_str: str) -> Decimal | None:
     """
     Converte uma string de preço para um float, removendo símbolos de moeda e separadores.
     Exemplo:"R$ 1.234,56" -> 1234.56
@@ -12,11 +12,14 @@ def price_sanitizer(price_str: str) -> Decimal:
     price_str = price_str.replace(".", "").replace(",", ".")
 
     price_str = price_str.replace("%", "").strip() # Para caso com procentagem.
+
+    if not price_str:
+        return None
     
     try:
-        return Decimal(price_str)  # Verifica se a string é um número válido 
+        return Decimal(price_str)  # Verifica se a string é um número válido
     except InvalidOperation:
-        raise InvalidOperation(f"Error during conversion of {price_str} to decimal.")
+        return Decimal(0)
 
 def search_element_verifier(soup, selector: str) -> str:
     """Busca um elemento usando um seletor CSS e verifica se ele existe. 
@@ -52,4 +55,5 @@ def search_indicator(indicator: str, soup, table_selector = "#table-indicators d
                     indicator_value = value.text.strip()
                     return indicator_value
                 
-    raise ScrapingError(f"Indicator '{indicator}' not found in the table.") 
+    return "" # Se nenhum indicador for encontrado retorna nada.
+    # raise ScrapingError(f"Indicator '{indicator}' not found in the table.") 

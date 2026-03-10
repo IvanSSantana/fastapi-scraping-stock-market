@@ -1,5 +1,4 @@
-import pytest
-from exceptions import ScrapingError
+import pytest # type: ignore
 from utils import search_indicator
 from bs4 import BeautifulSoup
 
@@ -50,8 +49,4 @@ def test_search_indicator_raises_when_not_found():
     """
     soup = BeautifulSoup(html, "html.parser")
 
-    with pytest.raises(ScrapingError) as error:
-        search_indicator("missing", soup)
-
-    assert str(error.value) == "Indicator 'missing' not found in the table."
-    assert error.type == ScrapingError
+    assert search_indicator("nonexistent", soup) == ""

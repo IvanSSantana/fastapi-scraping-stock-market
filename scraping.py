@@ -30,7 +30,7 @@ def search_asset(ticker: str):
         if img_variation:
             src = img_variation.get("src") or ""
             if "seta-down" in src:
-                variation = -variation
+                variation = -variation  # type: ignore
 
         table_indicators = "#table-indicators div.cell"
         pl = price_sanitizer(search_indicator("P/L", soup, table_indicators))

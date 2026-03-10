@@ -1,3 +1,3 @@
 class ScrapingError(Exception):
-    """Exceção base para erros personalizados"""
+    """Exceção para erros relacionados à raspagem de dados."""
     pass
