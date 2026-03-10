@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from exceptions import ScrapingError
 from responses import StockResponse
 from utils import price_sanitizer, search_element_verifier, search_indicator
 
@@ -48,6 +49,9 @@ def search_asset(ticker: str):
 
     except ValueError as error:
         raise ValueError(error)
+    
+    except ScrapingError as error:
+        raise ScrapingError(error)
 
     stock_response = StockResponse(
         ticker=site_ticker,
@@ -71,4 +75,6 @@ def search_asset(ticker: str):
 
 
 # Para testes
-print(search_asset("PETR4").model_dump_json(indent=4))
+if __name__ == "__main__":
+    # print(search_asset("PETR4").model_dump_json(indent=4))
+    print(search_asset("ITUB4").model_dump_json(indent=4))
