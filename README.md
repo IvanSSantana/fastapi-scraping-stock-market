@@ -9,4 +9,5 @@ Uma API escrita em Python com FastAPI que faz um scraping do site investidor10.c
 1. API recebe o ticker;
 2. Scraping busca principais indicadores e os últimos relatórios;
 3. Docling extrai todo conteúdo dos PDFs em string;
-4. IA gera resumo dos documentos;
+4. Fazer chunking dos documentos (quebrar PDFs em blocos menores, resumir cada bloco e sintetizar tudo num bloco de resumo final)
+4. IA gera resumo com capacidade avaliativa;

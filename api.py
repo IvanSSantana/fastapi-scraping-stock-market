@@ -1,13 +1,11 @@
-import csv
 from datetime import datetime
-import io
 from fastapi import FastAPI, Response, status
-from fastapi.responses import FileResponse, StreamingResponse
-from ai import generate_report, summarize_documents
+from fastapi.responses import StreamingResponse
+from ai import summarize_documents
+from chunking import batch_chunks, chunk
 from exceptions import NoDataForExportError
 from scraping import search_asset, search_pdfs_asset
-from files import export_to_csv, read_pdf, extract_relevant_lines
-from token_count import TokenCount
+from files import export_to_csv, read_pdf
 
 app = FastAPI()
 
@@ -50,19 +48,31 @@ async def get_report(ticker: str, response: Response):
         print("Procurando relatórios")
         pdfs_urls = search_pdfs_asset(ticker)
 
-        pdfs_raw_content = []
         print("Lendo PDFs")
+        all_summaries = []
         
         for url in pdfs_urls:
-            pdfs_raw_content.append(read_pdf(url))
-        
-        print("Processando chunks localmente")
+            if url is not pdfs_urls[0]: # -> para debug manual, mais rápido
+                break
+
+            doc = read_pdf(url)
+
+            print("Chunkeando os documentos")
+            chunks = chunk(doc)
+            print("Batcheando os documentos")
+
+            for batch in batch_chunks(chunks, batch_size=5):
+                print("Batch ...")
+                # Chamada da IA
+                summary = summarize_documents(batch)
+
+                all_summaries.append(summary)
 
         print("Resumindo documentos")
-        summarize = summarize_documents(pdfs_raw_content[1])
+        summarize = summarize_documents(all_summaries)
         
         response.status_code = status.HTTP_200_OK
-        return {"urls": pdfs_urls, "content": pdfs_raw_content, "summarize": summarize} # as urls são somente para testes, por enquanto
+        return {"urls": pdfs_urls, "summarize": summarize} # As urls são somente para testes, por enquanto
     
     except ValueError as e:
         response.status_code = status.HTTP_400_BAD_REQUEST

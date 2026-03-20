@@ -1,12 +1,19 @@
 import re
 from env import AI_API_KEY
 from google import genai
+from openai import OpenAI
 from google.genai import types
 from token_count import TokenCount
 
+# Clients
 client = genai.Client(api_key=AI_API_KEY)
+local_client = OpenAI(
+    base_url='http://localhost:11434/v1/', # Porta padrão que roda o Ollama localmente
+    api_key='ollama',  # Necessário, mas ignorado pelo Ollama)
+)
 
-def query(contents, temperature=0.5, max_tokens=400):
+# Queries
+def query(contents: str, temperature: float=0.5, max_tokens: int=400) -> str | None:
     """
     Wrapper para chamadas ao Gemini.
     """
@@ -22,14 +29,32 @@ def query(contents, temperature=0.5, max_tokens=400):
 
     return response.text
 
+def local_query(contents: str, temperature: float=0.5, max_tokens: int=400) -> str | None:
+     #TODO: Configurar IA local para rodar na GPU AMD RX 580
+    """
+    Wrapper para chamadas locais para IA do Llama3.
+    """
+
+    response = local_client.chat.completions.create(
+            model="llama3",  
+            messages=[
+                {"role": "user",
+                 "content": contents},
+            ],
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+
+    return response.choices[0].message.content
+
+# Principais Funções
 #TODO: Uso futuro em análise de gráficos: img_prompt = "Analise a imagem/gráfico e forneça todos os dados que ela(e) contém, com precisão númerica e observando atentamente as legendas (se houver). Por exemplo: 'Gráfico de Lucros da empresa Petrobras, revelando uma fatia de 37\\% correspondente a petróleo, 23\\% de alimentos e 40% de conservantes.'. Caso a imagem não seja um gráfico ou texto pertinente a área de finanças, por exemplo, um ícone ou imagem de pessoa, simplesmente retorne somente: 'Irrelevante'."
 
-def summarize_documents(summarizes: list) -> str | None:
+def summarize_documents(raw_documents: list, local: bool = True) -> str | None:
     """
-    Recebe os resumos analisados e gera resumos em lote
-    para reduzir drasticamente chamadas à API e tokens.
+    Recebe os textos 'crus' do Docling e gera um resumo geral de todos
     #TODO: Já está funcionando, entretanto será necessário forçar o uso de IA local para evitar estourar tokens.
-    #TODO: Resta testar com grandes documentos após o passo acima
+
     """ 
 
     content = ""
@@ -42,7 +67,9 @@ def summarize_documents(summarizes: list) -> str | None:
         Não escreva frases como "Aqui está o resumo".
         Caso nenhum dado seja fornecido somente retorne "Nenhum dado fornecido."
         Sintetize mantendo somente os 3 insights mais relevantes e impactantes por documento.
-        Mantenha valores númericos, dados e derivados todos preservados para melhor apuração futura dos ocorridos.
+        Mantenha valores númericos, dados e derivados todos preservados para melhor apuração futura dos fatos ocorridos.
+        Estruture a resposta em documentos.
+        Separe a resposta em seções por numeração dos documentos, como a seguir:
         Formato:
 
         DOCUMENTO 1:
@@ -50,23 +77,35 @@ def summarize_documents(summarizes: list) -> str | None:
 
         DOCUMENTO 2:
         ...
+
+        DOCUMENTO 3:
+        ...
         """
 
-    for i, summarize in enumerate(summarizes):
+    for i, doc in enumerate(raw_documents):
         content += f"""
             DOCUMENTO {i+1}:
-            {summarize}\n
+            {doc}\n
         """
 
-    print("CALLING GEMINI\n")
+    print("CALLING AI FOR SUMMARIZE\n")
     
-    summarize = query(
-        contents=prompt + content,
-        temperature=0.44,
-        max_tokens=3000
-    )
+    if local:
+        summarize = local_query(
+            contents=prompt + content,
+            temperature=0.44,
+            max_tokens=3000
+        )
+
+    else:
+        summarize = query(
+                contents=prompt + content,
+                temperature=0.44,
+                max_tokens=3000
+            )
 
     return summarize
+
 
 def generate_report(data) -> str | None:
     print("CALLING GEMINI\n")
