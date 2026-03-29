@@ -1,59 +1,8 @@
-from env import AI_API_KEY
-from google import genai
-from openai import OpenAI
-from google.genai import types
-
-# Clients
-client = genai.Client(api_key=AI_API_KEY)
-local_client = OpenAI(
-    base_url='http://localhost:11434/v1/', # Porta padrão que roda o Ollama localmente
-    api_key='ollama',  # Necessário, mas ignorado pelo Ollama)
-)
-
-# Queries
-def query(content: str, temperature: float=0.5, max_tokens: int=400) -> str | None:
-    #TODO: Corrigir estrutura da maneira que 'contents' é enviado, separando-o do prompt
-    """
-    Wrapper para chamadas ao Gemini.
-    """
-
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=content,
-        config=types.GenerateContentConfig(
-            temperature=temperature,
-            max_output_tokens=max_tokens
-        )
-    )
-
-    return response.text
-
-def local_query(persona: str, content: str, temperature: float=0.5, max_tokens: int=400) -> str | None:
-    """
-    Wrapper para chamadas locais para IA.
-    """
-
-    response = local_client.chat.completions.create(
-            model="qwen2.5:7b",  
-            messages=[
-                {
-                    "role": "system",
-                    "content": persona},
-                {
-                    "role": "user",
-                    "content": content}
-            ],
-            temperature=temperature,
-            max_completion_tokens=max_tokens
-        )
-
-    return response.choices[0].message.content
-
+from utils.ai.ai_query import local_query, query
 # Principais Funções
 #TODO: Uso futuro em análise de gráficos: img_prompt = "Analise a imagem/gráfico e forneça todos os dados que ela(e) contém, com precisão númerica e observando atentamente as legendas (se houver). Por exemplo: 'Gráfico de Lucros da empresa Petrobras, revelando uma fatia de 37\\% correspondente a petróleo, 23\\% de alimentos e 40% de conservantes.'. Caso a imagem não seja um gráfico ou texto pertinente a área de finanças, por exemplo, um ícone ou imagem de pessoa, simplesmente retorne somente: 'Irrelevante'."
 
 def summarize_documents_to_events(raw_documents: list, local: bool = True) -> str | None:
-    #TODO: Função para tratamento desse formato Json, isto é, testa, e corrige se necessário. 
     #TODO: Enviar para outra LLM simplificar ou  os eventos ao leitor leigo
     #TODO: Filtrar, simplificar e enviar para o template_report na seção eventos de maneira formatada
     """
@@ -66,7 +15,7 @@ def summarize_documents_to_events(raw_documents: list, local: bool = True) -> st
         Você é um extrator de eventos corporativos.
 
         OBJETIVO:
-        Extrair os 3 eventos corporativos mais relevantes e impactantes de cada documento.
+        Extrair os 3 eventos corporativos mais relevantes e impactantes de cada batch.
 
         REGRAS OBRIGATÓRIAS:
         - Responda SOMENTE em Português do Brasil.
@@ -103,7 +52,7 @@ def summarize_documents_to_events(raw_documents: list, local: bool = True) -> st
         {{
             "titulo": "Expansão de setor",
             "descricao": "A empresa irá expandir em um novo setor, em imóveis, além dos lanches.",
-            "impacto": "Ampliação de mercado clara com provável aumento de distribuição de cotas."
+            "impacto": "Ampliação de mercado clara com provável aumento de distribuição de cotas, entretanto existe risco de fracasso."
         }}
         ]
         ""
@@ -111,7 +60,7 @@ def summarize_documents_to_events(raw_documents: list, local: bool = True) -> st
 
     for i, doc in enumerate(raw_documents):
         content += f"""
-            DOCUMENTO {i+1}:
+            BATCH {i+1}:
             {doc}\n
         """
 
@@ -135,7 +84,7 @@ def summarize_documents_to_events(raw_documents: list, local: bool = True) -> st
     return summarize
 
 
-def generate_report(content: str, local: bool = True) -> str | None: 
+def generate_conclusion(content: str, local: bool = True) -> str | None: 
     #TODO: Refatorar prompt
     print("CALLING GEMINI\n")
     

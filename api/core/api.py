@@ -1,11 +1,13 @@
 from datetime import datetime
 from fastapi import FastAPI, Response, status
 from fastapi.responses import StreamingResponse
-from ai import summarize_documents_to_events, generate_report
-from chunking import batch_chunks, chunk
+from services.ai.ai_services import summarize_documents_to_events, generate_conclusion
+from utils.ai.chunking import batch_chunks, chunk
 from exceptions import NoDataForExportError
-from scraping import search_asset, search_pdfs_asset
-from files import export_to_csv, read_pdf
+from services.scraping.scraping import search_asset, search_pdfs_asset
+from services.files.files import export_to_csv, read_pdf, structures_events_to_markdown, generate_markdown_report
+from typing_utils import clean_json_from_ai
+import asyncio
 
 app = FastAPI()
 
@@ -25,7 +27,7 @@ async def get_asset(ticker: str, response: Response):
 async def get_asset_csv(ticker: str, response: Response):
     """Rota para exportar os dados de um ativo específico em formato CSV."""
     try:
-        stock = search_asset(ticker)
+        stock = await search_asset(ticker)
 
         output = export_to_csv(stock)
 
@@ -43,15 +45,23 @@ async def get_asset_csv(ticker: str, response: Response):
     
 @app.get("/api/v1/report/{ticker}")
 async def get_report(ticker: str, response: Response):
-    #TODO: Salvar análise já salva de imagens do mês e redefinir banco ao virar mês
+    #TODO: Salvar relatórios já gerados do mês e redefinir banco de dados ao virar mês
     try:
-        print("Procurando relatórios")
-        pdfs_urls = search_pdfs_asset(ticker)
+        print("Extraindo indicadores do ativo")
+        stock_task = search_asset(ticker)
 
-        print("Lendo PDFs")
-        all_summaries = []
+        print("Procurando relatórios")
+        pdfs_urls_task = search_pdfs_asset(ticker)
+
+        stock, pdfs_urls = await asyncio.gather( # Faz elas rodarem concomitantemente (concorrência)
+            stock_task,
+            pdfs_urls_task
+        )
         
-        for url in pdfs_urls:
+        print("Lendo PDFs")
+        all_events = []
+        
+        for url in pdfs_urls: 
             if url != pdfs_urls[4]: # -> para debug manual, mais rápido
                 continue
             
@@ -60,24 +70,36 @@ async def get_report(ticker: str, response: Response):
 
             print("Chunkeando os documentos")
             chunks = chunk(doc)
+
             print("Batcheando os documentos")
 
             for i, batch in enumerate(batch_chunks(chunks)):
                 print(f"Batch {i}")
                 # Chamada da IA
-                summary = summarize_documents_to_events(batch)
-                print(f"RESUMO {i}: {summary}") # PARA DEBUG
+                event = summarize_documents_to_events(batch)
+                print(f"EVENTO {i}: {event}") # PARA DEBUG
 
-                all_summaries.append(summary)
+                all_events.append(event)
 
-        print("Resumindo documentos")
-        summarize = summarize_documents_to_events(all_summaries)
+        print("Limpando eventos")
+        cleaned_all_events = []
+
+        for event in all_events:
+            cleaned_event = clean_json_from_ai(event)
+            cleaned_all_events.extend(cleaned_event)
 
         print("Gerando relatório final")
-        final_report = generate_report(content=summarize) # type: ignore
+        structures_events_to_markdown(cleaned_all_events)
+
+        string_report = generate_markdown_report(
+            stock.ticker, 
+            stock.segment, # type: ignore
+            stock.model_dump(), # type: ignore
+            cleaned_all_events
+        )
         
         response.status_code = status.HTTP_200_OK
-        return {"urls": pdfs_urls, "summarize": summarize, "report": final_report} # As urls são somente para testes, por enquanto
+        return {"report": string_report} # As urls são somente para testes, por enquanto
     
     except ValueError as e:
         response.status_code = status.HTTP_400_BAD_REQUEST

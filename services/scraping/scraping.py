@@ -2,7 +2,8 @@ from urllib import response
 from bs4 import BeautifulSoup
 from exceptions import ScrapingError
 from responses import StockResponse
-from utils import price_sanitizer, search_one_element_verifier, search_indicator
+from typing_utils import price_sanitizer
+from searching import search_one_element_verifier, search_indicator
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service 
 from selenium.webdriver.firefox.webdriver import WebDriver 
@@ -12,10 +13,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.firefox import GeckoDriverManager
 from datetime import datetime
 import requests
-from ai import generate_report
-from files import read_pdf
 
-def search_asset(ticker: str):
+async def search_asset(ticker: str):
     url = f"https://investidor10.com.br/acoes/{ticker}/"
 
     # SETUP DO BEAUTIFULSOUP
@@ -123,7 +122,7 @@ def search_asset(ticker: str):
     return stock_response   
     #TODO: Limitar requisição por mês, evitando criar CSVs desnecessários e sobrecarregar o site. Criar um log para monitoramento de erros e requisições.
 
-def search_pdfs_asset(ticker: str):
+async def search_pdfs_asset(ticker: str):
     url = f"https://investidor10.com.br/acoes/{ticker}/"
 
     # SETUP DO REQUESTS PARA EVITAR BLOQUEIOS DE ACESSO

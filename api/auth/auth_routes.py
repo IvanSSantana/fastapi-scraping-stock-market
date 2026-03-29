@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt # type: ignore
 from passlib.context import CryptContext # type: ignore
-from user_model import UserRegistration
+from repository.user_model import UserRegistration
 import uuid
 from env import AUTH_KEY, HASHING_ALGORITHM
 from datetime import datetime, timedelta

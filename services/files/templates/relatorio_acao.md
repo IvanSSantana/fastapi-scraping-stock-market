@@ -17,9 +17,9 @@ Empresa/FII do segmento **{{SEGMENTO}}**, com foco em {{DESCRICAO_RESUMIDA}}.
 |----------|------|--------------|
 | P/L | {{PL}} | {{PL_ANALISE}} |
 | P/VP | {{PVP}} | {{PVP_ANALISE}} |
-| Dividend Yield | {{DY}} | {{DY_ANALISE}} |
-| ROE | {{ROE}} | {{ROE_ANALISE}} |
-| ROIC | {{ROIC}} | {{ROIC_ANALISE}} |
+| Dividend Yield | {{DY}}% | {{DY_ANALISE}} |
+| ROE | {{ROE}}% | {{ROE_ANALISE}} |
+| ROIC | {{ROIC}}% | {{ROIC_ANALISE}} |
 
 ---
 
@@ -32,9 +32,8 @@ TODO: Fazer uma IA específica somente para ler o CSV ou StockResponse dos indic
 
 ## 🗂️ Eventos Corporativos Recentes
 
-#TODO: Organizar resposta da IA para retornar lista de jsons com campos data e descrição
 {{EVENTOS}}
-- **{{DATA}}** — {{DESCRICAO}}
+- **{{TITULO}}** — {{DESCRICAO}}; {{IMPACTO}}
 {{/EVENTOS}}
 
 ---

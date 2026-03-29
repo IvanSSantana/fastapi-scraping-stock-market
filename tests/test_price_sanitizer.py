@@ -1,5 +1,5 @@
 import pytest # type: ignore
-from utils import price_sanitizer
+from utils.typing import price_sanitizer
 from decimal import Decimal
 
 def test_should_remove_rs():
