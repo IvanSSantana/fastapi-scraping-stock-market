@@ -30,11 +30,9 @@ TODO: Fazer uma IA específica somente para ler o CSV ou StockResponse dos indic
 
 ---
 
-## 🗂️ Eventos Corporativos Recentes
+## 🗂️ Eventos Corporativos Relevantes
 
 {{EVENTOS}}
-- **{{TITULO}}** — {{DESCRICAO}}; {{IMPACTO}}
-{{/EVENTOS}}
 
 ---
 

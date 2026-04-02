@@ -75,7 +75,7 @@ def structures_events_to_markdown(events: list[dict[str, str]]) -> str:
         description = event.get("descricao")
         impact = event.get("impacto")
 
-        markdown_lines.append(f"- **{title}** - {description}; {impact}")
+        markdown_lines.append(f"- **{title}** - {description} Impacto: {impact}")
 
     return "\n".join(markdown_lines)
 

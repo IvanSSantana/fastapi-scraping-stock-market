@@ -75,9 +75,11 @@ async def get_report(ticker: str, response: Response):
 
             for i, batch in enumerate(batch_chunks(chunks)):
                 #  print(f"Batch {i}")
+
+                #TODO: Implementar concorrência para processar batches simultaneamente, otimizando perfomance
                 # Chamada da IA
                 event = summarize_documents_to_events(batch)
-                # print(f"EVENTO {i}: {event}") # PARA DEBUG
+                print(f"EVENTO {i}: {event}") # PARA DEBUG
 
                 all_events.append(event)
 

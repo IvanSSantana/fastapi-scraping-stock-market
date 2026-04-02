@@ -60,7 +60,8 @@ def clean_json_from_ai(ai_response: str) -> list[dict[str, str]]:
                 - Você é um conversor de texto para lista JSON válida. 
                 - Retorne SOMENTE JSON válido. 
                 - Não use ```json, não use markdown, não explique nada.
-                - SEMPRE mantenha os dados e conteúdos intactos.""",
+                - SEMPRE mantenha os dados e conteúdos intactos.
+                - O JSON SEMPRE deve ter o campo "importancia", se nenhum dado relacionado for informado dê seu valor "10".""",
                 f"Converta o texto a seguir para uma lista JSON válida:\n\n{ai_response}"
             )
 

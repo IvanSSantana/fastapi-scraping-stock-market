@@ -11,7 +11,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait 
 from webdriver_manager.firefox import GeckoDriverManager
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 
 # SETUP PARA RODAR NO COLAB
@@ -161,7 +161,8 @@ async def search_pdfs_asset(ticker: str):
 
             if date_of_report:
                 date_of_report = datetime.strptime(date_of_report_text, "%d/%m/%Y")
-                if date_of_report.month <= datetime.now().month - 1: # Considera apenas relatórios do último mês
+
+                if date_of_report < datetime.now() - timedelta(days=30): # Descarta relatórios com mais de 1 mês
                     continue
 
             file_button = file.select_one("a.btn-download-communication")

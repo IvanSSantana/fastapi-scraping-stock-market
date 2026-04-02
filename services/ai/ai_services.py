@@ -15,31 +15,37 @@ def summarize_documents_to_events(raw_documents: list, local: bool = True) -> st
         Você é um extrator de eventos corporativos.
 
         OBJETIVO:
-        Extrair os 3 eventos corporativos mais relevantes e impactantes de cada batch, priorizando eventos que realmente possam afetar a percepção do investidor, os resultados da empresa ou o valor do ativo.
-
-        Considere relevante somentoe o que tiver impacto econômic concreto ou potencial como lucro, dívida, dividendos, expansão, risco jurídico/regulatório, relevante estratégia com efeito financeiro, etc.
-        Ignore eventos burocráticos, societários ou administrativos como assembleias, reuniões, eleições, comitês, comunicados protocolares etc., a menos que o texto explicite uma consequência econômica objetiva e material.
-        Na importância, use 1 a 4 para eventos com impacto financeiro direto e 8 a 10 para eventos burocráticos, podendo até ignorá-los totalmente.
+        Extrair ATÉ 3 eventos corporativos mais relevantes e impactantes de cada batch, priorizando eventos que realmente possam afetar a percepção do investidor, os resultados da empresa ou o valor do ativo.
 
         REGRAS OBRIGATÓRIAS:
         - Responda SOMENTE em Português do Brasil.
         - NUNCA responda em inglês.
         - NUNCA escreva introduções.
         - NUNCA escreva frases como "Aqui está o resumo".
-        - Ignore nomes de pessoas, exceto se houver mudança relevante de cargo.
+        - Ignore nomes de pessoas, incluindo cargos e eleições.
         - Preserve todos os valores numéricos, percentuais, datas, indicadores e quantias monetárias.
         - Foque somente em movimentos, decisões, resultados e mudanças da empresa.
-        - Se nenhum dado for fornecido, responda exatamente:
-        "[{{Nenhum dado fornecido.}}]"
-        - Se o conteúdo não tiver nada relevante, responda exatamente:
-        "[{{Nenhum evento relevante encontrado.}}]"
         - Priorize eventos que realmente possam afetar a percepção do investidor, os resultados da empresa ou o valor do ativo.
-        
+        - Priorize eventos que envolvam estatísticas, números, indicadores, resultados e decisões.
+        - Dê mais importância aos eventos com indicadores fundamentalistas, como crescimento de receita, abatimento de dívidas, ROIC, EBITDA etc.
+        - Os impactos também podem ser negativos.
+        - Considere relevante somente o que tiver impacto econômico concreto e atual como lucro, dívida, dividendos, expansão, risco jurídico/regulatório etc.
+        - Ignore eventos burocráticos, societários, administrativos como assembleias, reuniões, eleições, comitês, comunicados protocolares etc. ou voltados ao público como Investor Day, a menos que o texto explicite uma consequência econômica objetiva e material.
+        - Todos os eventos SEMPRE devem ter importância diferentes.
+        - Se o conteúdo não contiver eventos suficientes, retorne menos eventos.
+        - Cada evento retornado deve ser rastreável diretamente ao texto fornecido.
+
         CLASSIFICAÇÃO DE IMPORTÂNCIA:
         A importância vai de 1 a 10:
-        - 1 = altíssimo potencial de impacto econômico / mercado
+        - 1 = altíssimo impacto econômico 
         - 10 = impacto praticamente nulo
 
+        - Se nenhum dado for fornecido, responda exatamente:
+        "[{{"importancia": "10"}}]"
+        - Se o conteúdo não tiver nada relevante, responda exatamente:
+        "[{{"importancia": "10"}}]"
+        - Se o conteúdo somente envolve nomes de pessoas ou cargos, responda exatamente:
+        "[{{"importancia": "10"}}]"
         
         FORMATO DE SAÍDA:
         SEMPRE Retorne SOMENTE JSON válido.
@@ -51,7 +57,7 @@ def summarize_documents_to_events(raw_documents: list, local: bool = True) -> st
             "titulo": "Título do evento",
             "descricao": "Descrição do evento",
             "impacto": "Impacto do evento para a corporação",
-            "importancia": "1"
+            "importancia": "5"
         }}
         Exemplo:
         ""
@@ -66,13 +72,7 @@ def summarize_documents_to_events(raw_documents: list, local: bool = True) -> st
             "titulo": "Expansão de setor",
             "descricao": "A empresa irá expandir em um novo setor, em imóveis, além dos lanches.",
             "impacto": "Ampliação de mercado clara com provável aumento de distribuição de cotas, entretanto existe risco de fracasso.",
-            "importancia": "1"
-        }},
-        {{
-            "titulo": "Reunião de Diretoria",
-            "descricao": "A diretoria da empresa tem reunião marcada para o dia 15 de março.",
-            "impacto": "Impacto nulo devido a nenhum dado direto fornecido imediatamente.",
-            "importancia": "10"
+            "importancia": "3"
         }}
         ]
         ""
@@ -90,15 +90,15 @@ def summarize_documents_to_events(raw_documents: list, local: bool = True) -> st
         summarize = local_query(
             persona=prompt,
             content=content,
-            temperature=0.08,
+            temperature=0.13,
             max_tokens=400
         )
 
     else:
         summarize = query(
                 content=prompt + content,
-                temperature=0.37,
-                max_tokens=400
+                temperature=0.11,
+                max_tokens=300
             )
 
     return summarize
