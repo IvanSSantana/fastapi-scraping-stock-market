@@ -38,7 +38,7 @@ TODO: Fazer uma IA específica somente para ler o CSV ou StockResponse dos indic
 
 ## ⚠️ Impactos Potenciais
 
-{{ANALISE_IA}}
+{{EVENTOS_CONCLUSAO}}
 
 ---
 

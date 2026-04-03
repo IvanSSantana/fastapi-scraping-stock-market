@@ -1,5 +1,5 @@
 import pytest # type: ignore
-from utils.typing import search_indicator
+from helpers.typing import search_indicator
 from bs4 import BeautifulSoup
 
 

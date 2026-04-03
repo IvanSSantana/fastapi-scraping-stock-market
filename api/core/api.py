@@ -2,11 +2,11 @@ from fastapi import FastAPI, Response, status
 from fastapi.responses import StreamingResponse, FileResponse
 from communication.exceptions import NoDataForExportError
 from services.scraping.scraping import search_asset, search_pdfs_asset
-from services.ai.ai_services import summarize_documents_to_events, generate_conclusion
+from services.ai.ai_services import generate_conclusion_of_events, summarize_documents_to_events
 from services.files.files_services import export_to_csv, read_pdf, generate_markdown_report, save_markdown_report
-from utils.ai.chunking import batch_chunks, chunk
-from utils.typing.typing_utils import clean_json_from_ai
-from utils.files.filter_events import filter_events
+from helpers.ai.chunking import batch_chunks, chunk
+from helpers.typing.clean_json import clean_json_from_ai
+from helpers.files.filter_events import filter_events
 import asyncio
 from datetime import datetime
 
@@ -64,6 +64,8 @@ async def get_report(ticker: str, response: Response):
         all_events = []
         
         for url in pdfs_urls: 
+            if url != pdfs_urls[4]:
+                continue
             
             print(f"URL: {url}")
             doc = read_pdf(url)
@@ -73,7 +75,10 @@ async def get_report(ticker: str, response: Response):
 
             print("Batcheando os documentos")
 
+            counter = 0
             for i, batch in enumerate(batch_chunks(chunks)):
+                if counter >= 7: # Limite de batches para DEBUG
+                    break
                 #  print(f"Batch {i}")
 
                 #TODO: Implementar concorrência para processar batches simultaneamente, otimizando perfomance
@@ -82,6 +87,7 @@ async def get_report(ticker: str, response: Response):
                 print(f"EVENTO {i}: {event}") # PARA DEBUG
 
                 all_events.append(event)
+                counter += 1
 
         print("Limpando eventos")
         cleaned_all_events = []
@@ -93,13 +99,18 @@ async def get_report(ticker: str, response: Response):
         print("Filtrando 10 eventos mais relevantes")
         filtered_events = filter_events(cleaned_all_events)
 
+        print("Simplificando eventos")
+        events_to_conclusion = filter_events(cleaned_all_events, 15)
+        events_conclusion = generate_conclusion_of_events(events_to_conclusion)
+
         print("Gerando relatório final")
 
         string_report = generate_markdown_report(
             stock.ticker, 
             stock.segment, # type: ignore
             stock.model_dump(), 
-            events=filtered_events
+            events=filtered_events,
+            events_conclusion=events_conclusion
         )
         
         file_report_path = save_markdown_report(string_report, stock.ticker)

@@ -2,8 +2,8 @@ from urllib import response
 from bs4 import BeautifulSoup
 from communication.exceptions import ScrapingError
 from communication.responses import StockResponse
-from utils.typing.typing_utils import price_sanitizer
-from utils.scraping.searching import search_one_element_verifier, search_indicator
+from helpers.typing.price_sanitizer import price_sanitizer
+from helpers.scraping.searching import search_one_element_verifier, search_indicator
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service 
 from selenium.webdriver.firefox.webdriver import WebDriver 

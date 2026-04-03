@@ -84,7 +84,8 @@ def generate_markdown_report(
     segment: str,
     # corporate_summarize: str,
     indicators: dict,
-    events: list[dict[str, str]] ,
+    events: list[dict[str, str]],
+    events_conclusion: str | None,
     # indicator_analysis: str,
     # ai_analysis: str,
     # conclusion: str,
@@ -97,7 +98,8 @@ def generate_markdown_report(
 
     with open(template_path, "r", encoding="utf-8") as file:
         template = file.read() # Arquivo Markdown em String
-
+    
+    #TODO: Reavaliar se isso deve se manter nessa função ou ser processada externamente, considerando princípio SRP
     eventos_md = structures_events_to_markdown(events)
 
     replacements = {
@@ -123,6 +125,7 @@ def generate_markdown_report(
 
         # "{{INTERPRETACAO_INDICADORES}}": interpretacao_indicadores,
         "{{EVENTOS}}": eventos_md,
+        "{{EVENTOS_CONCLUSAO}}": events_conclusion,
         # "{{ANALISE_IA}}": analise_ia,
         # "{{CONCLUSAO}}": conclusao,
     }

@@ -1,4 +1,6 @@
-from utils.ai.ai_query import local_query, query
+from helpers.ai.ai_query import local_query, query
+from helpers.typing.list_dicts_to_string import list_dicts_to_string
+
 # Principais Funções
 #TODO: Uso futuro em análise de gráficos: img_prompt = "Analise a imagem/gráfico e forneça todos os dados que ela(e) contém, com precisão númerica e observando atentamente as legendas (se houver). Por exemplo: 'Gráfico de Lucros da empresa Petrobras, revelando uma fatia de 37\\% correspondente a petróleo, 23\\% de alimentos e 40% de conservantes.'. Caso a imagem não seja um gráfico ou texto pertinente a área de finanças, por exemplo, um ícone ou imagem de pessoa, simplesmente retorne somente: 'Irrelevante'."
 
@@ -104,34 +106,56 @@ def summarize_documents_to_events(raw_documents: list, local: bool = True) -> st
     return summarize
 
 
-def generate_conclusion(content: str, local: bool = True) -> str | None: 
+def generate_conclusion_of_events(events: list[dict[str, str]], local: bool = True) -> str | None: 
     #TODO: Refatorar prompt
     print("CALLING GEMINI\n")
     
     prompt = f"""
-        Gere um relatório financeiro simplificado que pessoas que não entendem de finanças corporativas possam entender.
-        Você SEMPRE deve utilizar o formato: evento simplfiicado -> consequência.
-        Alguns trechos de exemplo: 'A dívida líquida em 7B da empresa Itaú é considerada alta, o que pode proporcionar queda/subida do ativo.';
-        'O indicador Lucro / CAGR é resumidamente o lucro da empresa, e nessas condições demonstra a maturidade e evolução da corporação.'. 
-        Separe o documento em seções como: Situação Geral da Empresa, Decisões / Movimentos Corporativos, Lucros, Dívidas, Indicadores e Conclusão.
-        SEMPRE mantenha consistência de estrutura.
-        NÃO escreva frases como: 'Aqui está sua resposta' ou 'Aqui está o resumo'.
-        NÃO faça introduções desnecessárias.
-        Escreva SEMPRE em Português do Brasil.
-        NUNCA responda em inglês.
-        Mesmo que o documento esteja parcialmente em inglês, traduza e responda somente em Português do Brasil, mantendo somente os termos técnicos que já são em inglês na lingua inglesa.
-        SEMPRE IGNORE nomes de pessoas, foque nos movimentos da empresa como um todo.
-        SEMPRE mostre o impacto dos dados, e NUNCA eles devem ser 'soltos'.
-        SEMPRE mostre os principais insights dos documentos, focando no desempenho e mudança corporativa.
-        Os eventos são:
-        {content}"""
+        Você é um analista de conclusão financeira simplificada.
+
+        OBJETIVO:
+        Gerar uma conclusão financeira clara, curta e útil para pessoas que não entendem finanças corporativas, com base SOMENTE nos eventos e indicadores fornecidos.
+
+        REGRAS OBRIGATÓRIAS:
+        - Responda SOMENTE em Português do Brasil.
+        - NUNCA responda em inglês.
+        - NUNCA escreva introduções.
+        - NUNCA escreva frases como "Aqui está o resumo" ou "Aqui está a análise".
+        - Explique tudo da forma mais simples possível.
+        - Sempre traduza ideias complexas para linguagem leiga.
+        - Foque SOMENTE em fatos e impactos práticos para o investidor.
+        - Preserve todos os valores numéricos, percentuais, datas e indicadores relevantes.
+        - NUNCA deixe números soltos; SEMPRE explique o que eles significam.
+        - SEMPRE ignore nomes de pessoas.
+        - Considere tanto impactos positivos quanto negativos.
+        - Não invente informações que não estejam presentes nos eventos ou indicadores fornecidos.
+        - Cada afirmação relevante deve ser justificável diretamente pelos dados ou contexto recebidos.
+        - Priorize impacto com base em indicadores financeiros e dados concretos.
+        - Caso existam sinais mistos, deixe isso explícito.
+        - SEMPRE indique o impacto direto dos eventos no valor do ativo como "tendência de subida", "indicação de queda", "estabilidade" etc.
+
+        INTERPRETAÇÃO ESPERADA:
+        Você deve transformar eventos e indicadores em leitura prática.
+        Exemplos do raciocínio esperado:
+        - "A empresa reduziu dívida; isso pode melhorar a saúde financeira, reduzir risco e aumentar o valor do ativo."
+        - "A empresa expandiu operação; isso pode aumentar receita no futuro, mas também traz risco atual, podendo ter queda temporária do valor do ativo, mas com subida futura."
+        - "Dividend Yield alto; isso pode ser atrativo para renda, e mediante o contexto de solidez fornecido, indica valorização do ativo."
+        - "Margens caindo; isso pode indicar queda do valor do ativo."
+        - "Lucro crescendo; isso tende a melhorar a percepção do mercado, aumentando o valor do ativo."
+        - "A empresa reduziu sua alavancagem; isso pode diminuir o risco financeiro, indicando maior estabilidade do valor do ativo."
+        - "O lucro cresceu no período; "isso tende a melhorar a percepção do mercado, tendendo a subida do valor do ativo."
+        - "A companhia expandiu operação; "isso pode abrir espaço para mais receita no futuro, entretanto traz risco atual, podendo causar queda temporária do valor do ativo, mas com subida futura."
+        - "A margem caiu; isso pode indicar pior eficiência operacional, gerando tendência de queda do valor do ativo."
+    """
     
+    events_string = list_dicts_to_string(events)
+
     if local:
         report = local_query(
                 persona=prompt,
-                content=content,
-                temperature=0.17,
-                max_tokens=3_000
+                content=events_string,
+                temperature=0.14,
+                max_tokens=750
             )   
     else:
         ...

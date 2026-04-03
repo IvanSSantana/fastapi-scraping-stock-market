@@ -1,6 +1,6 @@
 import pytest # type: ignore
 from exceptions import ScrapingError
-from utils.typing import search_one_element_verifier, search_indicator
+from helpers.typing import search_one_element_verifier, search_indicator
 from bs4 import BeautifulSoup
 
 
